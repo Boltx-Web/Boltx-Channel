@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ar">
+
+<head>
+  <!-- إعدادات الصفحة -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BOLTX</title>
+
+  <!-- تنسيقات الموقع -->
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      color: #b000ff;
+      font-family: Arial;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      padding: 20px;
+    }
+
+    .main {
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+      flex-wrap: wrap;
+    }
+
+    .posts {
+      flex: 1;
+      min-width: 280px;
+    }
+
+    .post {
+   width: 100%;
+   max-width: 500px;
+   border: 1px solid #b000ff;
+   padding: 15px;
+   border-radius: 15px;
+   margin-bottom: 20px;
+   background: #111;
+   box-sizing: border-box;
+   word-wrap: break-word;
+ }
+
+    .chat {
+      width: 360px;
+      max-width: 100%;
+      height: 560px;
+      border: 2px solid #b000ff;
+      border-radius: 20px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      background: #111;
+    }
+
+    .footer {
+      margin-top: 30px;
+      padding: 20px;
+      text-align: center;
+      border-top: 2px solid #b000ff;
+    }
+
+    .footer a {
+      margin: 10px;
+      color: #b000ff;
+      text-decoration: none;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      background: black;
+      color: #b000ff;
+      border: 1px solid #b000ff;
+    }
+
+    button {
+      padding: 8px 15px;
+      background: #b000ff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    @media(max-width:768px) {
+      .main {
+        flex-direction: column;
+      }
+
+      .chat {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+
+    <!-- LOGO -->
+    <div style="display:flex;align-items:center;gap:10px;">
+      <img src="logo.png" width="50">
+      <h2>BOLTX</h2>
+    </div>
+
+    <!-- NEW POST BUTTON -->
+    <div onclick="checkPassword()" style="cursor:pointer;text-align:center;">
+      <div style="font-size:35px;">+</div>
+      <div>New Post</div>
+    </div>
+
+    <!-- USER AREA -->
+    <div id="userArea">
+      <a href="login.html">
+        <img src="Logo & Icon/Signin.png" width="60">
+      </a>
+    </div>
+
+  </div>
+
+  <!-- LINE -->
+  <hr style="border:1px solid #b000ff;">
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+
+    <!-- POSTS SECTION -->
+    <div class="posts">
+      <h2>New</h2>
+      <div id="posts"></div>
+    </div>
+
+    <!-- CHAT SECTION -->
+    <div class="chat">
+
+      <h3 style="text-align:center;">Live Chat</h3>
+
+      <!-- CHAT MESSAGES -->
+      <div id="chatMessages" style="flex:1;overflow-y:auto;margin-bottom:10px;"></div>
+
+      <!-- CHAT INPUT -->
+      <div style="display:flex;gap:10px;">
+        <input id="chatInput" placeholder="Send message...">
+        <button onclick="sendMessage()">Send</button>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <a href="about.html">About</a>
+    <a href="privacy.html">Privacy Policy</a>
+    <a href="contact.html">Contact</a>
+  </div>
+
+  <!-- POST BOX -->
+  <div id="postBox" style="display:none;padding:20px;">
+    <textarea id="postText" placeholder="Write post..."></textarea>
+    <input type="file" id="postImage" accept="image/*">
+    <button onclick="addPost()">POST</button>
+  </div>
+
+  <!-- JAVASCRIPT -->
+  <script>
+
+    /* USER LOGIN STATUS */
+    let nickname = localStorage.getItem("nickname");
+
+    if (nickname) {
+      document.getElementById("userArea").innerHTML =
+        "<div>" + nickname +
+        "<br><small onclick='logout()' style='cursor:pointer;'>Logout</small></div>";
+    }
+
+    /* LOGOUT FUNCTION */
+    function logout() {
+      localStorage.removeItem("nickname");
+      location.reload();
+    }
+
+    /* CHECK PASSWORD FOR NEW POST */
+    function checkPassword() {
+      let password = prompt("Enter Password:");
+      if (password === "2626101020112011boltx") {
+        document.getElementById("postBox").style.display = "block";
+      }
+    }
+
+    /* LOAD POSTS */
+    function loadPosts() {
+      let posts = JSON.parse(localStorage.getItem("posts")) || [];
+      let box = document.getElementById("posts");
+
+      box.innerHTML = "";
+
+      posts.forEach((post, index) => {
+        box.innerHTML += `
+          <div class="post">
+            <div>${post.text}</div>
+
+            ${post.image ? `<img src="${post.image}" style="max-width:100%;margin-top:10px;border-radius:10px;">` : ''}
+
+            <div style="margin-top:10px;">
+              <button onclick="editPost(${index})">Edit</button>
+              <button onclick="deletePost(${index})" style="background:red;">Delete</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    /* ADD POST */
+    function addPost() {
+      let text = document.getElementById("postText").value;
+      let file = document.getElementById("postImage").files[0];
+      let posts = JSON.parse(localStorage.getItem("posts")) || [];
+
+      if (file) {
+        let reader = new FileReader();
+
+        reader.onload = function (e) {
+          posts.unshift({
+            text: text,
+            image: e.target.result
+          });
+
+          localStorage.setItem("posts", JSON.stringify(posts));
+          loadPosts();
+        }
+
+        reader.readAsDataURL(file);
+
+      } else {
+        posts.unshift({
+          text: text,
+          image: ""
+        });
+
+        localStorage.setItem("posts", JSON.stringify(posts));
+        loadPosts();
+      }
+
+      document.getElementById("postText").value = "";
+      document.getElementById("postImage").value = "";
+      document.getElementById("postBox").style.display = "none";
+    }
+
+    /* EDIT POST */
+    function editPost(index) {
+      let posts = JSON.parse(localStorage.getItem("posts")) || [];
+      let newText = prompt("Edit post:", posts[index].text);
+
+      if (newText !== null) {
+        posts[index].text = newText;
+        localStorage.setItem("posts", JSON.stringify(posts));
+        loadPosts();
+      }
+    }
+
+    /* DELETE POST */
+    function deletePost(index) {
+      let posts = JSON.parse(localStorage.getItem("posts")) || [];
+      posts.splice(index, 1);
+      localStorage.setItem("posts", JSON.stringify(posts));
+      loadPosts();
+    }
+
+    /* LOAD CHAT */
+    function loadChat() {
+      let messages = JSON.parse(localStorage.getItem("chatMessages")) || [];
+      let box = document.getElementById("chatMessages");
+
+      box.innerHTML = "";
+
+      messages.forEach((msg, index) => {
+        let mine = msg.name === nickname;
+
+        box.innerHTML += `
+          <div style="display:flex;justify-content:${mine ? 'flex-end' : 'flex-start'};margin-bottom:10px;">
+            <div style="background:${mine ? '#b000ff' : '#222'};padding:10px;border-radius:10px;color:white;max-width:70%;">
+              <div><b>${msg.name}</b></div>
+              <div>${msg.text}</div>
+              ${mine ? `<small onclick="deleteMessage(${index})" style="cursor:pointer;color:#ffcccc;">Delete</small>` : ''}
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    /* SEND MESSAGE */
+    function sendMessage() {
+      if (!nickname) {
+        alert("Login first");
+        return;
+      }
+
+      let text = document.getElementById("chatInput").value;
+      let messages = JSON.parse(localStorage.getItem("chatMessages")) || [];
+
+      messages.push({
+        name: nickname,
+        text: text
+      });
+
+      localStorage.setItem("chatMessages", JSON.stringify(messages));
+      document.getElementById("chatInput").value = "";
+      loadChat();
+    }
+
+    /* DELETE MESSAGE */
+    function deleteMessage(index) {
+      let messages = JSON.parse(localStorage.getItem("chatMessages")) || [];
+      messages.splice(index, 1);
+      localStorage.setItem("chatMessages", JSON.stringify(messages));
+      loadChat();
+    }
+
+    /* INITIAL LOAD */
+    loadPosts();
+    loadChat();
+
+  </script>
+
+</body>
+</html>
